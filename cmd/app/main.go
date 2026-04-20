@@ -4,6 +4,7 @@ import (
 	"github.com/ivanov-nikolay/REST-service/internal/config"
 	"github.com/ivanov-nikolay/REST-service/internal/db"
 	"github.com/ivanov-nikolay/REST-service/internal/repository"
+	"github.com/ivanov-nikolay/REST-service/internal/service"
 
 	"github.com/sirupsen/logrus"
 )
@@ -27,6 +28,9 @@ func main() {
 	log.Info("Migrations allied successfully!")
 
 	repo := repository.NewSubscriptionRepo(gormDB, log)
-	_ = repo
 	log.Info("Repository allied successfully!")
+
+	service := service.NewSubscriptionService(repo, log)
+	_ = service
+	log.Info("Service allied successfully!")
 }
