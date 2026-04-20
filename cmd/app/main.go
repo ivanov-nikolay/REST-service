@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/ivanov-nikolay/REST-service/internal/config"
 	"github.com/ivanov-nikolay/REST-service/internal/db"
+	"github.com/ivanov-nikolay/REST-service/internal/repository"
 
 	"github.com/sirupsen/logrus"
 )
@@ -23,7 +24,9 @@ func main() {
 	if err != nil {
 		log.WithError(err).Fatal("Failed to connect to database")
 	}
+	log.Info("Migrations allied successfully!")
 
-	_ = gormDB
-	log.Println("Migrations allied successfully!")
+	repo := repository.NewSubscriptionRepo(gormDB, log)
+	_ = repo
+	log.Info("Repository allied successfully!")
 }
