@@ -14,6 +14,7 @@ import (
 	"github.com/ivanov-nikolay/REST-service/internal/repository"
 	"github.com/ivanov-nikolay/REST-service/internal/service"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
@@ -40,14 +41,18 @@ func main() {
 	handler := handlers.NewSubscriptionHandler(svc, log)
 
 	e := echo.New()
+
+	e.Use(middleware.RecoverWithLogger(log))
 	e.Use(middleware.RequestLogger(log))
+
+	e.Validator = &CustomValidator{validator: validator.New()}
 
 	e.POST("/subscriptions", handler.Create)
 	e.GET("/subscriptions/:id", handler.GetByID)
 	e.PUT("/subscriptions/:id", handler.Update)
 	e.DELETE("/subscriptions/:id", handler.Delete)
 	e.GET("/subscriptions", handler.List)
-	e.GET("/subscriptions/total_cost", handler.GetTotalCost)
+	e.GET("/subscriptions/total-cost", handler.GetTotalCost)
 
 	go func() {
 		log.Infof("Starting server on port %s", cfg.AppConfig.ServerPort)
@@ -66,4 +71,12 @@ func main() {
 		log.WithError(err).Fatal("Server shutdown failed")
 	}
 	log.Info("Server exited gracefully")
+}
+
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+func (v *CustomValidator) Validate(i interface{}) error {
+	return v.validator.Struct(i)
 }
