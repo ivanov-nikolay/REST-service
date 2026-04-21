@@ -1,11 +1,20 @@
 package main
 
 import (
+	"context"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/ivanov-nikolay/REST-service/internal/config"
 	"github.com/ivanov-nikolay/REST-service/internal/db"
+	"github.com/ivanov-nikolay/REST-service/internal/handlers"
+	"github.com/ivanov-nikolay/REST-service/internal/middleware"
 	"github.com/ivanov-nikolay/REST-service/internal/repository"
 	"github.com/ivanov-nikolay/REST-service/internal/service"
 
+	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,12 +34,36 @@ func main() {
 	if err != nil {
 		log.WithError(err).Fatal("Failed to connect to database")
 	}
-	log.Info("Migrations allied successfully!")
 
 	repo := repository.NewSubscriptionRepo(gormDB, log)
-	log.Info("Repository allied successfully!")
+	svc := service.NewSubscriptionService(repo, log)
+	handler := handlers.NewSubscriptionHandler(svc, log)
 
-	service := service.NewSubscriptionService(repo, log)
-	_ = service
-	log.Info("Service allied successfully!")
+	e := echo.New()
+	e.Use(middleware.RequestLogger(log))
+
+	e.POST("/subscriptions", handler.Create)
+	e.GET("/subscriptions/:id", handler.GetByID)
+	e.PUT("/subscriptions/:id", handler.Update)
+	e.DELETE("/subscriptions/:id", handler.Delete)
+	e.GET("/subscriptions", handler.List)
+	e.GET("/subscriptions/total_cost", handler.GetTotalCost)
+
+	go func() {
+		log.Infof("Starting server on port %s", cfg.AppConfig.ServerPort)
+		if err := e.Start(":" + cfg.AppConfig.ServerPort); err != nil && err != http.ErrServerClosed {
+			log.WithError(err).Fatal("Server failed")
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	log.Info("Shutting down server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		log.WithError(err).Fatal("Server shutdown failed")
+	}
+	log.Info("Server exited gracefully")
 }

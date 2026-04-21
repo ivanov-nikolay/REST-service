@@ -172,7 +172,7 @@ func (r *subscriptionRepo) GetTotalCost(userID uuid.UUID, serviceName *string, p
 	}
 
 	var subs []models.Subscription
-	if err := r.db.Find(&subs).Error; err != nil {
+	if err := query.Find(&subs).Error; err != nil {
 		r.logger.WithError(err).Error("failed to query subscriptions for cost calculation")
 		return 0, err
 	}
@@ -180,13 +180,11 @@ func (r *subscriptionRepo) GetTotalCost(userID uuid.UUID, serviceName *string, p
 	totalCost := 0
 	for _, sub := range subs {
 		months := monthIntersect(sub.StartDate, sub.EndDate, periodStart, periodEnd)
-		contribution := sub.Price * months
-		totalCost += contribution
+		totalCost += sub.Price * months
 		r.logger.WithFields(logrus.Fields{
 			"subscription_id": sub.ID,
 			"price":           sub.Price,
 			"months":          months,
-			"contribution":    contribution,
 		}).Debug("subscription contribution to total cost")
 	}
 
@@ -212,7 +210,7 @@ func monthIntersect(subStart time.Time, subEnd *time.Time, periodStart, periodEn
 		return 0
 	}
 
-	months := (intersectEnd.Year()-intersectStart.Year())*12 + int(intersectEnd.Month()) - int(intersectStart.Month()+1)
+	months := (intersectEnd.Year()-intersectStart.Year())*12 + int(intersectEnd.Month()) - int(intersectStart.Month()) + 1
 	if months < 0 {
 		months = 0
 	}

@@ -2,11 +2,14 @@ package service
 
 import (
 	"errors"
-	"github.com/google/uuid"
+	"strings"
+	"time"
+
 	"github.com/ivanov-nikolay/REST-service/internal/models"
 	"github.com/ivanov-nikolay/REST-service/internal/repository"
+
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 type SubscriptionService interface {
@@ -38,6 +41,12 @@ func (s *subscriptionService) Create(sub *models.Subscription) error {
 		"start_date":   sub.StartDate,
 		"end_date":     sub.EndDate,
 	}).Debug("creating subscription")
+
+	if strings.TrimSpace(sub.ServiceName) == "" {
+		err := errors.New("service_name cannot be empty")
+		s.logger.WithError(err).Error("service_name is empty")
+		return err
+	}
 
 	if sub.Price < 0 {
 		err := errors.New("price cannot be negative")
@@ -91,6 +100,12 @@ func (s *subscriptionService) Update(sub *models.Subscription) error {
 	}
 
 	sub.UserID = existing.UserID
+
+	if strings.TrimSpace(sub.ServiceName) == "" {
+		err := errors.New("service_name cannot be empty")
+		s.logger.WithError(err).Error("service_name is empty")
+		return err
+	}
 
 	if sub.Price < 0 {
 		err := errors.New("price cannot be negative")
