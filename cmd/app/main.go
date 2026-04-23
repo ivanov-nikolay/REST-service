@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"time"
 
+	_ "github.com/ivanov-nikolay/REST-service/docs"
 	"github.com/ivanov-nikolay/REST-service/internal/config"
 	"github.com/ivanov-nikolay/REST-service/internal/db"
 	"github.com/ivanov-nikolay/REST-service/internal/handlers"
@@ -17,8 +18,14 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
+// @title Subscription Service API
+// @version 1.0
+// @description REST API for managing user subscriptions
+// @host localhost:8080
+// @BasePath /
 func main() {
 	cfg := config.Load()
 
@@ -53,6 +60,7 @@ func main() {
 	e.DELETE("/subscriptions/:id", handler.Delete)
 	e.GET("/subscriptions", handler.List)
 	e.GET("/subscriptions/total-cost", handler.GetTotalCost)
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	go func() {
 		log.Infof("Starting server on port %s", cfg.AppConfig.ServerPort)

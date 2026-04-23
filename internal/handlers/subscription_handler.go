@@ -45,6 +45,15 @@ type UpdateSubscriptionRequest struct {
 	EndDate     *string `json:"end_date" validate:"omitempty,datetime=01-2006"`
 }
 
+// @Summary Create subscription
+// @Tags subscriptions
+// @Accept json
+// @Produce json
+// @Param request body CreateSubscriptionRequest true "Subscription data"
+// @Success 201 {object} models.Subscription
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /subscriptions [post]
 func (h *SubscriptionHandler) Create(c echo.Context) error {
 	var req CreateSubscriptionRequest
 
@@ -93,6 +102,13 @@ func (h *SubscriptionHandler) Create(c echo.Context) error {
 	return c.JSON(http.StatusCreated, sub)
 }
 
+// @Summary Get subscription by ID
+// @Tags subscriptions
+// @Produce json
+// @Param id path string true "Subscription ID (UUID)"
+// @Success 200 {object} models.Subscription
+// @Failure 404 {object} map[string]interface{}
+// @Router /subscriptions/{id} [get]
 func (h *SubscriptionHandler) GetByID(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -111,6 +127,16 @@ func (h *SubscriptionHandler) GetByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, sub)
 }
 
+// @Summary Update subscription
+// @Tags subscriptions
+// @Accept json
+// @Produce json
+// @Param id path string true "Subscription ID"
+// @Param request body UpdateSubscriptionRequest true "Updated data"
+// @Success 200 {object} models.Subscription
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /subscriptions/{id} [put]
 func (h *SubscriptionHandler) Update(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -160,6 +186,12 @@ func (h *SubscriptionHandler) Update(c echo.Context) error {
 	return c.JSON(http.StatusOK, sub)
 }
 
+// @Summary Delete subscription
+// @Tags subscriptions
+// @Param id path string true "Subscription ID"
+// @Success 204
+// @Failure 404 {object} map[string]interface{}
+// @Router /subscriptions/{id} [delete]
 func (h *SubscriptionHandler) Delete(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -175,6 +207,19 @@ func (h *SubscriptionHandler) Delete(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
+// @Summary List subscriptions with pagination and filters
+// @Tags subscriptions
+// @Produce json
+// @Param page query int false "Page number (default 1)"
+// @Param page_size query int false "Page size (default 10)"
+// @Param user_id query string false "Filter by user ID (UUID)"
+// @Param service_name query string false "Filter by service name"
+// @Param start_date_from query string false "Start date from (YYYY-MM)"
+// @Param start_date_to query string false "Start date to (YYYY-MM)"
+// @Param end_date_from query string false "End date from (YYYY-MM)"
+// @Param end_date_to query string false "End date to (YYYY-MM)"
+// @Success 200 {object} map[string]interface{}
+// @Router /subscriptions [get]
 func (h *SubscriptionHandler) List(c echo.Context) error {
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	pageSize, _ := strconv.Atoi(c.QueryParam("page_size"))
@@ -224,6 +269,16 @@ func (h *SubscriptionHandler) List(c echo.Context) error {
 	})
 }
 
+// @Summary Calculate total cost for period
+// @Tags subscriptions
+// @Produce json
+// @Param user_id query string true "User ID (UUID)"
+// @Param start_date query string true "Period start (MM-YYYY)"
+// @Param end_date query string true "Period end (MM-YYYY)"
+// @Param service_name query string false "Service name filter"
+// @Success 200 {object} map[string]int
+// @Failure 400 {object} map[string]interface{}
+// @Router /subscriptions/total-cost [get]
 func (h *SubscriptionHandler) GetTotalCost(c echo.Context) error {
 	userIDStr := c.QueryParam("user_id")
 	if userIDStr == "" {
